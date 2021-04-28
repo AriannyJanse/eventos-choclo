@@ -68,6 +68,7 @@ router.post('/login', (req, res) => {
 });
 
 function isAuth(req, res){
+    //If there is no Authorization key in header, app will crash with error "TypeError: Cannot read property 'replace' of undefined"
     let token = req.headers['authorization'];
 
     if(token == ""){
@@ -190,33 +191,37 @@ router.post('/newUser', (req, res) => {
 });
 
 router.put('/updateUserByID/:id', (req, res) => {
-    const parsedID = parseInt(req.params.id);
-    const userToUpdate = {
-        name: req.body.name,
-        last_name: req.body.last_name,
-        email: req.body.email,
-        password: req.body.password,
-    };
+    let result = isAuth(req,res);
 
-    db.connect((err, client, done) => {
-        if(err){
-            res.status(400).json({err});
-        } else {
-            const query = `UPDATE users SET name = $1, last_name = $2, email = $3, password = $4 WHERE id = ${parsedID} RETURNING *`;
-            const values = [userToUpdate.name, userToUpdate.last_name, userToUpdate.email, userToUpdate.password];
+    if(result == 'ok') {
+        const parsedID = parseInt(req.params.id);
+        const userToUpdate = {
+            name: req.body.name,
+            last_name: req.body.last_name,
+            email: req.body.email,
+            password: req.body.password,
+        };
 
-            client.query(query, values, (error, result) => {
-                done();
-                if(error){
-                    res.status(400).json({error})
-                }
-                res.status(200).send({
-                    status: 'Successful',
-                    result: result.rows[0],
+        db.connect((err, client, done) => {
+            if(err){
+                res.status(400).json({err});
+            } else {
+                const query = `UPDATE users SET name = $1, last_name = $2, email = $3, password = $4 WHERE id = ${parsedID} RETURNING *`;
+                const values = [userToUpdate.name, userToUpdate.last_name, userToUpdate.email, userToUpdate.password];
+
+                client.query(query, values, (error, result) => {
+                    done();
+                    if(error){
+                        res.status(400).json({error})
+                    }
+                    res.status(200).send({
+                        status: 'Successful',
+                        result: result.rows[0],
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 });
 
 router.delete('/deleteUserByID/:id', (req, res) => {
