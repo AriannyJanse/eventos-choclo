@@ -126,52 +126,38 @@ router.get('/getAllUsers', (req, res) => {
 });
 
 router.get('/getUserByID/:id', (req, res) => {
-    const parsedID = parseInt(req.params.id);
-    let token = req.headers['authorization'];
+    let result = isAuth(req,res);
 
-    switch(isAuth(token)) {
-        case 'noToken':
-            return res.status(401).send({
-                status: 'Failed',
-                message: 'Missing authentication token'
-            });
-            break;
-        case 'invalidToken':
-            return res.status(401).send({
-                status: 'Failed',
-                auth: false,
-                message: 'Invalid authentication token'
-            });
-            break;
-        case 'ok':
-    };
+    if(result == 'ok'){
+        const parsedID = parseInt(req.params.id);
+
+        db.connect((err, client, done) => {
+            if(err) {
+                res.status(400).json({err});
+            } else {
+                const query = `SELECT * FROM users WHERE id = ${parsedID}`;
     
-    db.connect((err, client, done) => {
-        if(err) {
-            res.status(400).json({err});
-        } else {
-            const query = `SELECT * FROM users WHERE id = ${parsedID}`;
-
-            client.query(query, (error, result) => {
-                done();
-                if(error) {
-                    res.status(400).json({error});
-                }
-                if(result.rows < '1'){
-                    res.status(404).send({
-                        status: 'Failed',
-                        message: 'No users information found',
-                    });
-                } else {
-                    res.status(200).send({
-                        status: 'Successful',
-                        message: 'Users information retrieved',
-                        users: result.rows,
-                    });
-                }
-            });
-        }
-    });
+                client.query(query, (error, result) => {
+                    done();
+                    if(error) {
+                        res.status(400).json({error});
+                    }
+                    if(result.rows < '1'){
+                        res.status(404).send({
+                            status: 'Failed',
+                            message: 'No users information found',
+                        });
+                    } else {
+                        res.status(200).send({
+                            status: 'Successful',
+                            message: 'Users information retrieved',
+                            users: result.rows,
+                        });
+                    }
+                });
+            }
+        });
+    }
 });
 
 router.post('/newUser', (req, res) => {
