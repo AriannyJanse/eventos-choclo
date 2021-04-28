@@ -17,16 +17,16 @@ router.post('/login', (req, res) => {
     };
     db.connect((err, client, done) => {
         if(err){
-            res.status(400).json({err});
+            return res.status(400).json({err});
         } else {
             const getQuery = `SELECT * FROM users WHERE email = '${data.email}'`;
             client.query(getQuery, (error, result) => {
                 done();
                 if(error) {
-                    res.status(400).json({error});
+                    return res.status(400).json({error});
                 }
                 if(result.rows < '1'){
-                    res.status(404).send({
+                    return res.status(404).send({
                         status: 'Failed',
                         message: 'No user information found',
                     });
@@ -53,7 +53,7 @@ router.post('/login', (req, res) => {
                         } else {
                             let token = jwt.sign(data, 'Secret Password', { expiresIn: 86400 //expires in 24 hours
                             });
-                            res.status(200).send({
+                            return res.status(200).send({
                                 status: 'Successful',
                                 auth: true,
                                 token: token,
@@ -68,6 +68,7 @@ router.post('/login', (req, res) => {
 });
 
 function isAuth(req, res){
+    //If there is no Authorization key in header, app will crash with error "TypeError: Cannot read property 'replace' of undefined"
     let token = req.headers['authorization'];
 
     if(token == ""){
@@ -98,7 +99,7 @@ router.get('/getAllUsers', (req, res) => {
     if(result == 'ok'){
         db.connect((err, client, done) => {
             if(err) {
-                res.status(400).json({err});
+                return res.status(400).json({err});
             } else {
                 const query = `SELECT * FROM users`;
                 client.query(query, (error, result) => {
@@ -126,52 +127,38 @@ router.get('/getAllUsers', (req, res) => {
 });
 
 router.get('/getUserByID/:id', (req, res) => {
-    const parsedID = parseInt(req.params.id);
-    let token = req.headers['authorization'];
+    let result = isAuth(req,res);
 
-    switch(isAuth(token)) {
-        case 'noToken':
-            return res.status(401).send({
-                status: 'Failed',
-                message: 'Missing authentication token'
-            });
-            break;
-        case 'invalidToken':
-            return res.status(401).send({
-                status: 'Failed',
-                auth: false,
-                message: 'Invalid authentication token'
-            });
-            break;
-        case 'ok':
-    };
+    if(result == 'ok'){
+        const parsedID = parseInt(req.params.id);
+
+        db.connect((err, client, done) => {
+            if(err) {
+                return res.status(400).json({err});
+            } else {
+                const query = `SELECT * FROM users WHERE id = ${parsedID}`;
     
-    db.connect((err, client, done) => {
-        if(err) {
-            res.status(400).json({err});
-        } else {
-            const query = `SELECT * FROM users WHERE id = ${parsedID}`;
-
-            client.query(query, (error, result) => {
-                done();
-                if(error) {
-                    res.status(400).json({error});
-                }
-                if(result.rows < '1'){
-                    res.status(404).send({
-                        status: 'Failed',
-                        message: 'No users information found',
-                    });
-                } else {
-                    res.status(200).send({
-                        status: 'Successful',
-                        message: 'Users information retrieved',
-                        users: result.rows,
-                    });
-                }
-            });
-        }
-    });
+                client.query(query, (error, result) => {
+                    done();
+                    if(error) {
+                        return res.status(400).json({error});
+                    }
+                    if(result.rows < '1'){
+                        return res.status(404).send({
+                            status: 'Failed',
+                            message: 'No users information found',
+                        });
+                    } else {
+                        return res.status(200).send({
+                            status: 'Successful',
+                            message: 'Users information retrieved',
+                            users: result.rows,
+                        });
+                    }
+                });
+            }
+        });
+    }
 });
 
 router.post('/newUser', (req, res) => {
@@ -184,7 +171,7 @@ router.post('/newUser', (req, res) => {
 
     db.connect((err, client, done) => {
         if(err) {
-            res.status(400).json({err});
+            return res.status(400).json({err});
         } else {
             const query = 'INSERT INTO users(name, last_name, email, password) VALUES($1, $2, $3, $4) RETURNING *';
             const values = [data.name, data.last_name, data.email, data.password];
@@ -192,9 +179,9 @@ router.post('/newUser', (req, res) => {
             client.query(query, values, (error, result) => {
                 done();
                 if(error) {
-                    res.status(400).json({error});
+                    return res.status(400).json({error});
                 }
-                res.status(202).send({
+                return res.status(202).send({
                     status: 'Successful',
                     result: result.rows[0],
                 });
@@ -204,54 +191,62 @@ router.post('/newUser', (req, res) => {
 });
 
 router.put('/updateUserByID/:id', (req, res) => {
-    const parsedID = parseInt(req.params.id);
-    const userToUpdate = {
-        name: req.body.name,
-        last_name: req.body.last_name,
-        email: req.body.email,
-        password: req.body.password,
-    };
+    let result = isAuth(req,res);
 
-    db.connect((err, client, done) => {
-        if(err){
-            res.status(400).json({err});
-        } else {
-            const query = `UPDATE users SET name = $1, last_name = $2, email = $3, password = $4 WHERE id = ${parsedID} RETURNING *`;
-            const values = [userToUpdate.name, userToUpdate.last_name, userToUpdate.email, userToUpdate.password];
+    if(result == 'ok') {
+        const parsedID = parseInt(req.params.id);
+        const userToUpdate = {
+            name: req.body.name,
+            last_name: req.body.last_name,
+            email: req.body.email,
+            password: req.body.password,
+        };
 
-            client.query(query, values, (error, result) => {
-                done();
-                if(error){
-                    res.status(400).json({error})
-                }
-                res.status(200).send({
-                    status: 'Successful',
-                    result: result.rows[0],
+        db.connect((err, client, done) => {
+            if(err){
+                return res.status(400).json({err});
+            } else {
+                const query = `UPDATE users SET name = $1, last_name = $2, email = $3, password = $4 WHERE id = ${parsedID} RETURNING *`;
+                const values = [userToUpdate.name, userToUpdate.last_name, userToUpdate.email, userToUpdate.password];
+
+                client.query(query, values, (error, result) => {
+                    done();
+                    if(error){
+                        return res.status(400).json({error})
+                    }
+                    return res.status(200).send({
+                        status: 'Successful',
+                        result: result.rows[0],
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 });
 
 router.delete('/deleteUserByID/:id', (req, res) => {
-    const parsedID = parseInt(req.params.id);
+    let result = isAuth(req,res);
 
-    db.connect((err, client, done) => {
-        if(err){
-            res.status(400).json({err});
-        } else {
-            const query = `DELETE FROM users WHERE id = ${parsedID}`;
+    if(result == 'ok') {
+        const parsedID = parseInt(req.params.id);
 
-            client.query(query, (error, result) => {
-                done();
-                if(error){
-                    res.status(400).json({error});
-                }
-                res.status(200).send({
-                    status: 'Successful',
-                    message: '¡User deleted successfully!'
+        db.connect((err, client, done) => {
+            if(err){
+                return res.status(400).json({err});
+            } else {
+                const query = `DELETE FROM users WHERE id = ${parsedID}`;
+
+                client.query(query, (error, result) => {
+                    done();
+                    if(error){
+                        return res.status(400).json({error});
+                    }
+                    return res.status(200).send({
+                        status: 'Successful',
+                        message: '¡User deleted successfully!'
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 });
