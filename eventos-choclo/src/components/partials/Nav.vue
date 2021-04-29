@@ -13,7 +13,7 @@
   <div id="navbar" class="navbar-menu">
     <div class="navbar-start">
       <router-link to="/" class="navbar-item">Inicio</router-link>
-      <router-link to="/about" class="navbar-item">Sobre Nosotros</router-link>
+      <router-link to="/about" class="navbar-item">Cont&aacute;ctanos</router-link>
     </div>
     <div class="navbar-end">
       <div class="navbar-item">

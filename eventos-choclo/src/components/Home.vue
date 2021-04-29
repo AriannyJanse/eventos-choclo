@@ -10,17 +10,20 @@
           Tu mejor opci&oacute;n en entretenimiento
         </h2>
         <div class="button-block">
-          <button class="button is-xl is-dark">Mira nuestro cat&aacute;logo de eventos</button>
+          <button class="button is-xl is-dark">Participa en nuestra encuesta</button>
         </div>
       </div>
     </div>
   </section>
+  <EventsList />
 </div>
 </template>
 <script>
+import EventsList from '../components/EventsList';
 export default {
   name: 'home',
   components: {
+    EventsList
   }
 }
 </script>
