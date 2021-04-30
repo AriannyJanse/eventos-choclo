@@ -10,7 +10,9 @@
           Tu mejor opci&oacute;n en entretenimiento
         </h2>
         <div class="button-block">
-          <button class="button is-xl is-dark">Participa en nuestra encuesta</button>
+          <router-link to="/survey">
+            <button class="button is-xl is-dark">Participa en nuestra encuesta</button>
+          </router-link>
         </div>
       </div>
     </div>

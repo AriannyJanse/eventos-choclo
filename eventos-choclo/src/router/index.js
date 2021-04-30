@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Home from '../components/Home.vue'
 import About from '../components/About.vue'
 import EventSingle from '../views/EventSingle.vue'
+import Survey from '../views/Survey.vue'
 
 Vue.use(VueRouter)
 
@@ -21,6 +22,11 @@ const routes = [
     path: '/event/:id',
     name: 'eventSingle',
     component: EventSingle
+  },
+  {
+    path: '/survey/',
+    name: 'Survey',
+    component: Survey
   },
 ]
 
