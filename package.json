@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js",
-    "create": "node ./models/userModel createUsersTable"
+    "create": "node ./models/userModel createUsersTable",
+    "create-survey-table": "node ./models/surveyModel createSurveyTable"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
