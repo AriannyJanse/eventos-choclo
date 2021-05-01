@@ -8,7 +8,11 @@ const createUsersTable = () => {
       last_name VARCHAR(100) NOT NULL,
       email VARCHAR(100) NOT NULL UNIQUE,
       password VARCHAR(100) NOT NULL
-    )`;
+    )
+    ;
+
+    ALTER TABLE public.survey
+    OWNER to pfotmwkjgqjeyk;`;
 
     db.connect((err, client, done) => {
         if(err) {
