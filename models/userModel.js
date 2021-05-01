@@ -11,7 +11,7 @@ const createUsersTable = () => {
     )
     ;
 
-    ALTER TABLE public.survey
+    ALTER TABLE public.users
     OWNER to pfotmwkjgqjeyk;`;
 
     db.connect((err, client, done) => {
